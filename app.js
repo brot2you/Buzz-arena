@@ -35,7 +35,7 @@ let projectionAudioUnlocked=false;
 let lastMode='pc';
 function selectedSound(value){return knownSounds.has(value)?value:'tv';}
 function playSelectedSound(id,reportId=''){
-  const src=buzzerFiles[selectedSound(id)];
+  const src=new URL(buzzerFiles[selectedSound(id)],import.meta.url).href;
   try{
     if(activePreview){activePreview.pause();activePreview.currentTime=0;}
     const audio=new Audio(src);
@@ -65,7 +65,13 @@ function playSelectedSound(id,reportId=''){
     }
     audio.play().then(()=>{if(reportId)message(reportId,'');}).catch(err=>{
       console.error('Lecture audio impossible',src,err);
-      if(reportId)message(reportId,err?.name==='NotAllowedError'?'Clique sur « Écouter » pour autoriser la lecture audio.':'Impossible de lire le son sélectionné ('+src.split('/').pop()+').');
+      if(reportId){
+        const file=decodeURIComponent(new URL(src).pathname.split('/').pop());
+        const why=err?.name==='NotAllowedError'?'Le navigateur bloque le son : appuie sur Écouter.':
+          err?.name==='NotSupportedError'?'Le navigateur ne reconnaît pas le format de '+file+'.':
+          'Impossible de lire '+file+' ('+(err?.name||'erreur inconnue')+').';
+        message(reportId,why);
+      }
     });
   }catch(err){if(reportId)message(reportId,'Impossible de lire ce son.');}
 }
