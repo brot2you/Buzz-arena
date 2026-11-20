@@ -13,3 +13,15 @@
 .qr-box small{font-weight:900;color:#7182a1;margin-top:12px;text-align:center}
 .qr-box .notice{text-align:center;font-size:12px;margin:5px 0 0}
 @media(max-width:680px){.qr-connect{flex-direction:column;align-items:stretch;padding:20px}.qr-box{align-self:center;width:min(100%,280px)}}
+
+/* Sélecteur de sons personnalisé */
+.sound-picker{background:#fff6ea;border:2px solid #ffdfb4;border-radius:18px;padding:16px}
+.sound-picker-row{display:flex;align-items:stretch;gap:10px;margin-top:8px}
+.sound-picker-row select{flex:1;min-width:0}
+.sound-picker-row button{flex-shrink:0;min-height:44px}
+.sound-picker small{display:block;margin-top:10px;color:#7182a1}
+.student-sound{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;margin:18px auto 0}
+.student-sound label{font-weight:900;color:#2b4a8b}
+.student-sound select{max-width:min(270px,100%);padding:10px 12px;border-radius:14px;border:2px solid #e1e5f3;background:#fff;color:#263e6c;min-height:44px}
+.student-sound button{min-height:44px}
+@media(max-width:450px){.sound-picker-row{flex-wrap:wrap}.sound-picker-row select{flex-basis:100%}}
