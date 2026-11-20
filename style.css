@@ -66,3 +66,39 @@
 .projection-lower #projectionScores .score-row{width:100%;text-align:left}
 .projection-lower #projectionScores .score-row--active{background:#c77cff69}
 @media(max-width:480px){.scoreboard{padding:18px 12px 22px}.score-row{grid-template-columns:22px 38px minmax(0,1fr) auto;gap:8px;padding:8px 6px;min-height:58px}.score-avatar{width:37px;height:37px;font-size:20px;border-radius:12px}.score-rank{font-size:20px}.score-note{font-size:9px}.score-points small{font-size:9px}}
+
+
+/* Panneau Élèves connectés — menthe / turquoise, en contraste avec le classement violet */
+#teacher .side-panel{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(150deg,#e5fff7 0%,#c9f3ef 55%,#bde8fa 100%);
+  border:2px solid #9bded7;
+  border-bottom:6px solid #75bdbd;
+  border-radius:25px;
+  box-shadow:0 12px 26px #2a8c9b20,inset 0 1px #ffffffdc;
+  color:#20536b;
+}
+#teacher .side-panel::before{
+  content:"";position:absolute;top:-58px;right:-48px;width:190px;height:190px;
+  border-radius:50%;background:radial-gradient(circle,#ffffff9a,transparent 70%);
+  pointer-events:none;
+}
+#teacher .side-panel .row-between{position:relative;z-index:1;padding-bottom:13px;border-bottom:2px solid #ffffffa8}
+#teacher .side-panel .section-kicker{color:#177d8c;font:900 13px Nunito,sans-serif;letter-spacing:1.3px}
+#teacher .side-panel .count{background:linear-gradient(145deg,#20bda1,#188cbb);border:2px solid #fff;color:#fff;box-shadow:0 3px 0 #168b9680;min-width:38px;text-align:center}
+#teacher .side-panel .players-list{position:relative;z-index:1;display:flex;flex-direction:column;gap:9px;padding:10px 2px 4px}
+#teacher .side-panel .player-item{
+  border:1px solid #ffffffd4;
+  border-bottom:3px solid #a6d5d9;
+  border-radius:15px;
+  background:#ffffffbf;
+  padding:11px 12px;
+  box-shadow:0 4px 12px #2c86911a;
+}
+#teacher .side-panel .player-item strong{color:#245474}
+#teacher .side-panel .player-item small{color:#538598}
+#teacher .side-panel .empty{color:#447f89}
+#teacher .side-panel .kick-player{background:#fff0f2;color:#b43d53;border-color:#f1b9c4}
+#teacher .side-panel .kick-player:hover{background:#ffe0e8}
+@media(max-width:480px){#teacher .side-panel .player-item{flex-wrap:wrap;gap:10px}#teacher .side-panel .player-manage{width:100%;justify-content:space-between}}
