@@ -38,3 +38,31 @@
 .kick-player{background:#fff0f1;border:1px solid #f2c6cc;border-radius:12px;color:#b73c51;padding:9px 12px;min-height:40px;font-weight:900;font-size:12px}
 .kick-player:hover{background:#ffe0e4}
 .kick-player:focus-visible{outline:3px solid #e97789;outline-offset:2px}
+
+/* Classement style plateau TV : panneau violet, rang, avatar, score et mise en lumière */
+.scoreboard{margin-top:20px;background:linear-gradient(146deg,#7828b9 0%,#5910a6 47%,#41008d 100%);border:2px solid #a774d6;border-bottom:7px solid #35046e;border-radius:28px;padding:25px clamp(16px,3.5vw,38px) 30px;box-shadow:0 14px 30px #33106524;color:#fff;overflow:hidden}
+.scoreboard-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.scoreboard-top h3{color:white;text-shadow:0 3px 8px #21004a69;font:700 clamp(25px,3vw,34px) Fredoka,sans-serif;margin:4px 0}
+.score-kicker{font-size:10px;font-weight:900;letter-spacing:2px;color:#e9d2ff}
+.scoreboard .secondary{background:#ffffff29;color:white;border:1px solid #ffffff4a;box-shadow:inset 0 -3px #27005433}
+.scores-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.score-row{display:grid;grid-template-columns:34px 48px minmax(0,1fr) auto;align-items:center;gap:14px;min-height:66px;padding:7px 14px;border-radius:12px;color:white;background:#ffffff0a;transition:background .2s}
+.score-row:nth-child(even){background:#ffffff12}
+.score-row--leader{background:#ffffff24}
+.score-row--active,.score-row--active:nth-child(even){background:#ffffff3f;border:1px solid #e6cbff7a;box-shadow:0 4px 16px #2f005b33}
+.score-rank{font:700 25px Fredoka,sans-serif;text-align:center}
+.score-avatar{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font:700 25px Fredoka,sans-serif;color:#fff;background:linear-gradient(150deg,#ffb76a,#f45f8e);border:3px solid #fffb;box-shadow:0 4px 0 #26004a36}
+.score-row:nth-child(4n + 2) .score-avatar{background:linear-gradient(150deg,#67d5ef,#5d8cff)}
+.score-row:nth-child(4n + 3) .score-avatar{background:linear-gradient(150deg,#ffe07b,#e6a73d)}
+.score-row:nth-child(4n + 4) .score-avatar{background:linear-gradient(150deg,#9bdfc8,#42bb91)}
+.score-name-wrap{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 10px;min-width:0}
+.score-name{font:700 clamp(16px,2vw,20px) Fredoka,sans-serif;overflow-wrap:anywhere;min-width:0}
+.score-note{font-size:10px;background:#fff3;border-radius:999px;padding:3px 8px;font-weight:900;white-space:nowrap}
+.score-points{font:700 clamp(19px,2.5vw,25px) Fredoka,sans-serif;white-space:nowrap}
+.score-points small{font:800 11px Nunito,sans-serif;margin-left:4px;color:#ead4ff}
+.score-empty{color:#f1dfff;text-align:center;margin:20px auto;font-weight:800}
+.projection-score-title{font:700 22px Fredoka,sans-serif;margin-top:16px}
+.projection-lower #projectionScores{margin:14px auto 0;display:flex;flex-direction:column;gap:6px;max-width:740px}
+.projection-lower #projectionScores .score-row{width:100%;text-align:left}
+.projection-lower #projectionScores .score-row--active{background:#c77cff69}
+@media(max-width:480px){.scoreboard{padding:18px 12px 22px}.score-row{grid-template-columns:22px 38px minmax(0,1fr) auto;gap:8px;padding:8px 6px;min-height:58px}.score-avatar{width:37px;height:37px;font-size:20px;border-radius:12px}.score-rank{font-size:20px}.score-note{font-size:9px}.score-points small{font-size:9px}}
