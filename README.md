@@ -1,12 +1,22 @@
-# BUZZ ARENA — Connexion Firebase
+# BUZZ ARENA by BROT2YOU
 
-L'application utilise le projet Firebase **quiz-arena-brot2you** avec des données séparées sous `buzzArena/sessions`.
+Application de buzzers multijoueur sur GitHub Pages, avec un projet Firebase dédié.
 
-## Mise en service
+## Projet Firebase
 
-1. Firebase Console > projet quiz-arena-brot2you > Authentication : vérifier que **Google** et **Anonyme** sont activés et que **brot2you.github.io** figure dans les domaines autorisés.
-2. Realtime Database > Règles : faire une copie des règles **actuellement publiées**. Comparer à `firebase-rules-QUIZ-ET-BUZZ.json`, puis fusionner la section `buzzArena` dans les règles actives. **Ne pas remplacer les règles QUIZ ARENA** par `database.rules.json`.
-3. Publier les règles Firebase fusionnées. Le déploiement GitHub Pages ne publie pas ces règles.
-4. Depuis https://brot2you.github.io/Buzz-arena/ : créer une partie avec un compte Google puis rejoindre depuis un autre navigateur/téléphone.
+- ID : `buzz-arena-brot2you`
+- Realtime Database : `https://buzz-arena-brot2you-default-rtdb.europe-west1.firebasedatabase.app`
+- Configuration Web : `firebase-config.js`
+- Règles à publier manuellement : `database.rules.json`
 
-Les connexions en temps réel ne peuvent pas fonctionner avant la publication des règles Firebase. Les sessions n'ont pas de suppression automatique ; éviter les noms complets des élèves. Tout compte Google peut créer une session dont il devient le seul propriétaire.
+## Mise en service (obligatoire)
+
+1. Dans Firebase Console, projet **buzz-arena-brot2you**, ouvrir **Realtime Database > Règles**.
+2. Remplacer les règles par le contenu entier du fichier **database.rules.json** de ce dépôt et cliquer sur **Publier**. Ne pas publier les règles du projet Quiz Arena.
+3. Dans **Authentication > Méthode de connexion**, activer **Google** (professeur) et **Anonyme** (élèves).
+4. Dans **Authentication > Paramètres > Domaines autorisés**, ajouter **brot2you.github.io** si nécessaire.
+5. Sur `https://brot2you.github.io/Buzz-arena/`, créer une partie avec Google sur le poste enseignant et rejoindre depuis un autre appareil anonyme.
+
+### Notes
+
+L'application ne peut pas accéder aux données tant que les règles Firebase ne sont pas publiées. Le site est indépendant de Quiz Arena. Un compte Google connecté peut créer sa propre session ; seules ses sessions peuvent ensuite être gérées par ce compte. Éviter de saisir les noms complets des élèves.
