@@ -33,18 +33,40 @@ let projectionAudioEnabled=false;
 let teacherAudioUnlocked=false;
 let projectionAudioUnlocked=false;
 let lastMode='pc';
-function selectedSound(value){return knownSounds.has(value)?value:'loud';}
+function selectedSound(value){return knownSounds.has(value)?value:'tv';}
 function playSelectedSound(id,reportId=''){
   const src=buzzerFiles[selectedSound(id)];
   try{
     if(activePreview){activePreview.pause();activePreview.currentTime=0;}
     const audio=new Audio(src);
     activePreview=audio;
-    audio.volume=.85;
+    audio.volume=id==='voice'?1:.85;
+    // The Voice : renforcement sonore via Web Audio, avec compression pour limiter la saturation.
+    if(id==='voice'){
+      try{
+        const AudioCtx=window.AudioContext||window.webkitAudioContext;
+        if(AudioCtx){
+          const ctx=new AudioCtx();
+          const source=ctx.createMediaElementSource(audio);
+          const gain=ctx.createGain();
+          gain.gain.value=1.85;
+          const limiter=ctx.createDynamicsCompressor();
+          limiter.threshold.value=-12;
+          limiter.knee.value=8;
+          limiter.ratio.value=12;
+          limiter.attack.value=.003;
+          limiter.release.value=.15;
+          source.connect(gain).connect(limiter).connect(ctx.destination);
+          audio.addEventListener('ended',()=>ctx.close().catch(()=>{}),{once:true});
+          audio.addEventListener('error',()=>ctx.close().catch(()=>{}),{once:true});
+          ctx.resume().catch(()=>{});
+        }
+      }catch(err){console.warn('Amplification The Voice indisponible',err);}
+    }
     audio.play().then(()=>{if(reportId)message(reportId,'');}).catch(err=>{if(reportId)message(reportId,'Son indisponible : vérifie le fichier audio dans le dossier sounds/ ou autorise le son du navigateur.');});
   }catch(err){if(reportId)message(reportId,'Impossible de lire ce son.');}
 }
-function soundFromWinner(){const uid=roomData?.buzz?.uid;return uid?selectedSound(roomData?.players?.[uid]?.sound):'loud';}
+function soundFromWinner(){const uid=roomData?.buzz?.uid;return uid?selectedSound(roomData?.players?.[uid]?.sound):'tv';}
 function playWinnerSound(){const mode=roomData?.meta?.audioMode==='both'?'both':'pc';if(role==='student'&&mode==='both')playSelectedSound(soundFromWinner());else if(role==='teacher'&&teacherAudioEnabled)playSelectedSound(soundFromWinner());else if(role==='projection'&&projectionAudioEnabled)playSelectedSound(soundFromWinner());}
 function ping(){try{const context=new AudioContext(),osc=context.createOscillator(),gain=context.createGain();osc.connect(gain);gain.connect(context.destination);osc.type='sine';osc.frequency.setValueAtTime(740,context.currentTime);osc.frequency.exponentialRampToValueAtTime(460,context.currentTime+.16);gain.gain.setValueAtTime(.12,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.22);osc.start();osc.stop(context.currentTime+.22);}catch{}}
 function playerEntries(){return Object.entries(roomData?.players||{}).map(([uid,p])=>({uid,...p}));}
@@ -105,5 +127,5 @@ async function copyLink(){const url=new URL(location.href);url.search='?room='+r
 function exportCSV(){const rows=[['Nom','Équipe','Points'],...playerEntries().map(p=>[p.name,p.team||'',String(roomData?.scores?.[p.uid]||0)])];const csv='\ufeff'+rows.map(r=>r.map(s=>'"'+String(s).replaceAll('"','""')+'"').join(';')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='buzz-arena-'+room+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(u),2000);}
 function projection(){if(!room)return;window.open(location.origin+location.pathname+'?room='+room+'&view=projection','_blank','noopener');}
 async function viewProjection(code){if(!ensureConfigured('joinMsg')){show('join');return;}try{await anonymous();const s=await get(ref(db,sessionsPath+'/'+code+'/meta'));if(!s.exists())throw Error('Partie introuvable.');role='projection';listen(code);show('projection');}catch(e){show('join');message('joinMsg',fail(e));}}
-bind('goTeacher',()=>show('teacherAuth'));bind('goStudent',()=>show('join'));document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.target)));bind('createSession',create);$('mode').addEventListener('change',()=> $('teamField').classList.toggle('hidden',$('mode').value!=='teams'));$('joinForm').addEventListener('submit',join);$('codeInput').addEventListener('input',()=>{$('codeInput').value=$('codeInput').value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g,'');loadTeamChoices();});bind('previewSound',()=>playSelectedSound($('soundChoice').value,'joinMsg'));bind('previewStudentSound',()=>playSelectedSound($('studentSoundChoice').value,'studentHint'));$('studentSoundChoice').addEventListener('change',async()=>{if(!room||!me||role!=='student')return;try{await update(ref(db,`${sessionsPath}/${room}/players/${me}`),{sound:selectedSound($('studentSoundChoice').value)});playSelectedSound($('studentSoundChoice').value);}catch(err){message('studentHint',fail(err));}});$('audioOutputMode').addEventListener('change',async()=>{const mode=$('audioOutputMode').value;await teacherAction({audioMode:mode});message('teacherMsg',mode==='both'?'Son diffusé sur le PC et les smartphones (si les navigateurs le permettent).':'Son diffusé uniquement sur le PC.');});bind('enableTeacherSound',()=>{teacherAudioEnabled=true;playSelectedSound('loud','teacherMsg');$('enableTeacherSound').textContent='♫ Son du PC activé';});bind('enableProjectionSound',()=>{projectionAudioEnabled=true;playSelectedSound('loud');$('enableProjectionSound').textContent='♫ Son activé';});bind('buzzButton',buzz);bind('openBuzz',()=>teacherAction({status:'open'}));bind('closeBuzz',()=>teacherAction({status:'closed'}));bind('resetBuzz',reset);bind('addPoint',()=>award(1));bind('subtractPoint',()=>award(-1));bind('copyLink',copyLink);bind('exportResults',exportCSV);bind('project',projection);bind('exitTeacher',resetView);bind('exitStudent',resetView);bind('exitProjection',resetView);
+bind('goTeacher',()=>show('teacherAuth'));bind('goStudent',()=>show('join'));document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.target)));bind('createSession',create);$('mode').addEventListener('change',()=> $('teamField').classList.toggle('hidden',$('mode').value!=='teams'));$('joinForm').addEventListener('submit',join);$('codeInput').addEventListener('input',()=>{$('codeInput').value=$('codeInput').value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g,'');loadTeamChoices();});bind('previewSound',()=>playSelectedSound($('soundChoice').value,'joinMsg'));bind('previewStudentSound',()=>playSelectedSound($('studentSoundChoice').value,'studentHint'));$('studentSoundChoice').addEventListener('change',async()=>{if(!room||!me||role!=='student')return;try{await update(ref(db,`${sessionsPath}/${room}/players/${me}`),{sound:selectedSound($('studentSoundChoice').value)});playSelectedSound($('studentSoundChoice').value);}catch(err){message('studentHint',fail(err));}});$('audioOutputMode').addEventListener('change',async()=>{const mode=$('audioOutputMode').value;await teacherAction({audioMode:mode});message('teacherMsg',mode==='both'?'Son diffusé sur le PC et les smartphones (si les navigateurs le permettent).':'Son diffusé uniquement sur le PC.');});bind('enableTeacherSound',()=>{teacherAudioEnabled=true;playSelectedSound('tv','teacherMsg');$('enableTeacherSound').textContent='♫ Son du PC activé';});bind('enableProjectionSound',()=>{projectionAudioEnabled=true;playSelectedSound('tv');$('enableProjectionSound').textContent='♫ Son activé';});bind('buzzButton',buzz);bind('openBuzz',()=>teacherAction({status:'open'}));bind('closeBuzz',()=>teacherAction({status:'closed'}));bind('resetBuzz',reset);bind('addPoint',()=>award(1));bind('subtractPoint',()=>award(-1));bind('copyLink',copyLink);bind('exportResults',exportCSV);bind('project',projection);bind('exitTeacher',resetView);bind('exitStudent',resetView);bind('exitProjection',resetView);
 const params=new URLSearchParams(location.search),precode=(params.get('room')||'').toUpperCase();if(/^[A-HJ-NP-Z2-9]{6}$/.test(precode)){if(params.get('view')==='projection')viewProjection(precode);else if(params.get('view')==='teacher'){if(!ready){show('teacherAuth');message('teacherAuthMsg','Configure Firebase pour accéder à la régie.');}else{show('teacherAuth');message('teacherAuthMsg','Reconnecte-toi pour créer une nouvelle session ou ouvre la régie dans ton onglet d’origine.');}}else{$('codeInput').value=precode;show('join');loadTeamChoices();}}
