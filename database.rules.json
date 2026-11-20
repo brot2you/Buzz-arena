@@ -1,0 +1,40 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "sessions": {
+      "$code": {
+        ".read": "auth != null && $code.matches(/^[A-HJ-NP-Z2-9]{6}$/) && data.child('meta').exists()",
+        "meta": {
+          ".write": "auth != null && auth.uid === 'REMPLACER_UID_PROFESSEUR' && (!data.exists() || data.child('owner').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['owner','status','mode','createdAt']) && newData.child('owner').val() === auth.uid && (newData.child('status').val() === 'open' || newData.child('status').val() === 'closed') && (newData.child('mode').val() === 'solo' || newData.child('mode').val() === 'teams')",
+          "$other": { ".validate": true }
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('sessions').child($code).child('meta').exists() && (!data.exists() || newData.child('name').val() === data.child('name').val())",
+            ".validate": "newData.hasChildren(['name','team','lastSeen']) && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 22 && newData.child('team').isString() && newData.child('lastSeen').isNumber() && newData.child('lastSeen').val() <= now + 60000",
+            "name": { ".validate": "newData.isString()" },
+            "team": { ".validate": "newData.isString() && newData.val().length <= 24" },
+            "lastSeen": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "buzz": {
+          ".write": "auth != null && ((auth.uid === 'REMPLACER_UID_PROFESSEUR') || (!data.exists() && root.child('sessions').child($code).child('meta').child('status').val() === 'open' && newData.child('uid').val() === auth.uid && root.child('sessions').child($code).child('players').child(auth.uid).exists()))",
+          ".validate": "newData.hasChildren(['uid','at']) && newData.child('uid').isString() && newData.child('at').isNumber() && newData.child('at').val() <= now + 60000",
+          "uid": { ".validate": "newData.isString()" },
+          "at": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+        "scores": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === 'REMPLACER_UID_PROFESSEUR' && root.child('sessions').child($code).child('players').child($uid).exists()",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
