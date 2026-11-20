@@ -102,3 +102,11 @@
 #teacher .side-panel .kick-player{background:#fff0f2;color:#b43d53;border-color:#f1b9c4}
 #teacher .side-panel .kick-player:hover{background:#ffe0e8}
 @media(max-width:480px){#teacher .side-panel .player-item{flex-wrap:wrap;gap:10px}#teacher .side-panel .player-manage{width:100%;justify-content:space-between}}
+
+/* Identité de marque : logos PNG transparents déposés dans /assets */
+.brand-logo-horizontal{display:block;width:clamp(200px,24vw,286px);height:auto;max-height:82px;object-fit:contain;object-position:left center;filter:drop-shadow(0 2px 4px #4d2b6220)}
+.brand-logo-fallback:not([hidden]){display:flex;align-items:center;gap:10px}
+.hero-deco-logo{height:clamp(210px,29vw,340px);margin:0 auto 8px}
+.hero-logo{height:100%;width:min(100%,500px);object-fit:contain;filter:drop-shadow(0 12px 18px #5f31902b)}
+.hero-deco-fallback:not([hidden]){position:relative;display:grid;place-items:center;width:100%;height:100%}
+@media(max-width:720px){.brand-logo-horizontal{width:min(61vw,245px);max-height:68px}.hero-deco-logo{height:245px}}
