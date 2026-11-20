@@ -129,3 +129,17 @@
  #home .hero-deco-logo{height:177px!important;max-height:177px!important;margin-bottom:15px!important}
  #home .hero-deco-logo .hero-logo{width:230px!important;max-width:65vw!important;height:168px!important;max-height:168px!important}
 }
+
+/* Logo final : respecter le ratio réel du PNG (1200x387), sans le réduire par max-height. */
+.topbar{min-height:124px;gap:14px}
+.topbar .brand{flex:0 1 auto;max-width:min(440px,calc(100% - 144px));min-width:0}
+.topbar .brand-logo-horizontal{display:block;width:400px!important;height:auto!important;max-width:100%!important;max-height:none!important;aspect-ratio:1200/387;object-fit:contain!important;filter:drop-shadow(0 3px 6px #42236422)}
+#home .hero-deco-logo{height:280px!important;max-height:none!important;margin:12px auto 21px!important;display:flex;align-items:center;justify-content:center}
+#home .hero-deco-logo .hero-logo{display:block;width:385px!important;height:auto!important;max-width:92vw!important;max-height:270px!important;object-fit:contain!important;filter:drop-shadow(0 8px 15px #5f319028)}
+@media(max-width:600px){
+ .topbar{min-height:89px;gap:6px}
+ .topbar .brand{max-width:calc(100% - 8px)}
+ .topbar .brand-logo-horizontal{width:265px!important;height:auto!important;max-height:none!important;max-width:70vw!important}
+ #home .hero-deco-logo{height:210px!important;max-height:none!important;margin:7px auto 18px!important}
+ #home .hero-deco-logo .hero-logo{width:275px!important;height:auto!important;max-width:80vw!important;max-height:200px!important}
+}
