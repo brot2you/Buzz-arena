@@ -20,3 +20,17 @@ Application de buzzers multijoueur sur GitHub Pages, avec un projet Firebase dé
 ### Notes
 
 L'application ne peut pas accéder aux données tant que les règles Firebase ne sont pas publiées. Le site est indépendant de Quiz Arena. Un compte Google connecté peut créer sa propre session ; seules ses sessions peuvent ensuite être gérées par ce compte. Éviter de saisir les noms complets des élèves.
+
+## Sons de buzzer personnalisés (5 sons)
+
+Les élèves choisissent et testent leur son avant d'entrer, et peuvent le modifier pendant la partie. À l'arrivée du premier buzz, la régie et l'écran de projection jouent le son choisi si le professeur a cliqué « Activer le son ». Un navigateur peut limiter la lecture automatique tant qu'aucun bouton sonore n'a été cliqué.
+
+**Installation des sons :** déposer les 5 fichiers MP3 dans le répertoire `sounds/` (inclus dans l'archive `BUZZ-ARENA-Sons.zip` fournie dans le chat). Le dossier doit contenir :
+
+- `sounds/the-voice.mp3`
+- `sounds/loud-correct-buzzer.mp3`
+- `sounds/tv-total-buzzer.mp3`
+- `sounds/question-pour-un-champion.mp3`
+- `sounds/funny-correct-buzzer.mp3`
+
+**Important :** republier `database.rules.json` dans la Realtime Database Firebase du projet `buzz-arena-brot2you`, car le champ `players/$uid/sound` est nouveau. Sans cette mise à jour, l'inscription d'un élève peut être rejetée. Les fichiers audio ne sont pas encore présents dans le dépôt tant qu'ils n'ont pas été envoyés manuellement.
