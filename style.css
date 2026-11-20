@@ -117,3 +117,15 @@
 #home .hero-deco-logo{height:170px!important;max-height:170px!important;min-height:0!important;margin:4px auto 12px!important;overflow:visible}
 #home .hero-deco-logo .hero-logo{width:220px!important;max-width:55vw!important;height:160px!important;max-height:160px!important;display:block;object-fit:contain!important;filter:drop-shadow(0 7px 12px #5f319025)}
 @media(max-width:600px){.topbar .brand-logo-horizontal{width:190px!important;max-width:62vw!important;height:48px!important;max-height:48px!important}#home .hero-deco-logo{height:145px!important;max-height:145px!important}#home .hero-deco-logo .hero-logo{height:138px!important;max-height:138px!important;width:185px!important}}
+
+/* Ajustement V2 : logos légèrement agrandis, sans recouvrir les boutons */
+.topbar .brand{max-width:calc(100% - 145px)}
+.topbar .brand-logo-horizontal{width:310px!important;max-width:62vw!important;height:76px!important;max-height:76px!important}
+#home .hero-deco-logo{height:220px!important;max-height:220px!important;margin:6px auto 18px!important}
+#home .hero-deco-logo .hero-logo{width:290px!important;max-width:65vw!important;height:208px!important;max-height:208px!important}
+@media(max-width:600px){
+ .topbar .brand{max-width:100%}
+ .topbar .brand-logo-horizontal{width:222px!important;max-width:67vw!important;height:58px!important;max-height:58px!important}
+ #home .hero-deco-logo{height:177px!important;max-height:177px!important;margin-bottom:15px!important}
+ #home .hero-deco-logo .hero-logo{width:230px!important;max-width:65vw!important;height:168px!important;max-height:168px!important}
+}
