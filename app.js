@@ -19,6 +19,7 @@ async function anonymous(){if(!auth)throw Error('Firebase non configuré.');if(a
 async function google(){if(!auth)throw Error('Firebase non configuré.');const data=await signInWithPopup(auth,new GoogleAuthProvider());user=data.user;return user;}
 function makeCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return [...bytes].map(b=>chars[b%chars.length]).join('');}
 function listen(code){clearListeners();room=code;stopRoom=onValue(ref(db,`${sessionsPath}/${room}`),s=>{if(!s.exists()){if(role==='teacher')message('teacherMsg','La session a été supprimée.');else if(role==='student')message('studentHint','Cette partie est terminée.');return;}const prev=knownBuzz;roomData=s.val();knownBuzz=roomData.buzz?.uid||'';if(role==='teacher')renderTeacher();if(role==='student')renderStudent();if(role==='projection')renderProjection();if(knownBuzz && prev!==knownBuzz)ping();},err=>{const msg=fail(err);if(role==='teacher')message('teacherMsg',msg);if(role==='student')message('studentHint',msg);});}
+function showJoinQR(code){const target=$('joinQrCode');if(!target)return;target.replaceChildren();$('qrRoomCode').textContent=code;const joinUrl=new URL(location.pathname,location.origin);joinUrl.searchParams.set('room',code);if(typeof window.QRCode==='function'){new window.QRCode(target,{text:joinUrl.href,width:190,height:190,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});message('qrMessage','');}else{message('qrMessage','QR indisponible. Utilise « Copier le lien élève ».');}}
 function ping(){try{const context=new AudioContext(),osc=context.createOscillator(),gain=context.createGain();osc.connect(gain);gain.connect(context.destination);osc.type='sine';osc.frequency.setValueAtTime(740,context.currentTime);osc.frequency.exponentialRampToValueAtTime(460,context.currentTime+.16);gain.gain.setValueAtTime(.12,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.22);osc.start();osc.stop(context.currentTime+.22);}catch{}}
 function playerEntries(){return Object.entries(roomData?.players||{}).map(([uid,p])=>({uid,...p}));}
 function teamScore(name){return playerEntries().filter(p=>p.team===name).reduce((sum,p)=>sum+Number(roomData?.scores?.[p.uid]||0),0);}
@@ -46,7 +47,7 @@ async function create(){
       console.error('BUZZ ARENA - écriture meta Firebase refusée', {project:firebaseConfig.projectId, path:sessionsPath+'/'+code+'/meta', uid:u.uid, provider:u.providerData?.map(p=>p.providerId), error:err});
       throw Error('Écriture Firebase refusée (étape création). Projet : '+firebaseConfig.projectId+' ; chemin : /'+sessionsPath+'/'+code+'/meta ; connexion : '+(u.providerData?.map(p=>p.providerId).join(',')||'inconnue')+'. Vérifie que les règles de CE projet sont publiées. Détail : '+(err.code||err.message));
     }
-    role='teacher';teacherSession=true;room=code;show('teacher');
+    role='teacher';teacherSession=true;room=code;show('teacher');showJoinQR(code);
     message('teacherMsg','Session créée. Connexion à la régie…');
     listen(code);
     history.replaceState(null,'','?room='+code+'&view=teacher');
