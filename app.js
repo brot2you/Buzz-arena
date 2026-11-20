@@ -40,16 +40,16 @@ function playSelectedSound(id,reportId=''){
     if(activePreview){activePreview.pause();activePreview.currentTime=0;}
     const audio=new Audio(src);
     activePreview=audio;
-    audio.volume=id==='voice'?1:.85;
-    // The Voice : renforcement sonore via Web Audio, avec compression pour limiter la saturation.
-    if(id==='voice'){
+    audio.volume=(id==='voice'||id==='mushroom')?1:.85;
+    // Renforce les extraits moins audibles (The Voice et Mario Champignon).
+    if(id==='voice'||id==='mushroom'){
       try{
         const AudioCtx=window.AudioContext||window.webkitAudioContext;
         if(AudioCtx){
           const ctx=new AudioCtx();
           const source=ctx.createMediaElementSource(audio);
           const gain=ctx.createGain();
-          gain.gain.value=1.85;
+          gain.gain.value=id==='mushroom'?2.8:1.85;
           const limiter=ctx.createDynamicsCompressor();
           limiter.threshold.value=-12;
           limiter.knee.value=8;
