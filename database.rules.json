@@ -29,7 +29,7 @@
               ".validate": false
             },
             "sound": {
-              ".validate": "newData.isString() && (newData.val() === 'voice' || newData.val() === 'loud' || newData.val() === 'tv' || newData.val() === 'champion' || newData.val() === 'funny')"
+              ".validate": "newData.isString() && (newData.val() === 'voice' || newData.val() === 'loud' || newData.val() === 'tv' || newData.val() === 'champion' || newData.val() === 'funny' || newData.val() === 'mario_no' || newData.val() === 'airhorn' || newData.val() === 'sms' || newData.val() === 'slap' || newData.val() === 'metal' || newData.val() === 'netflix' || newData.val() === 'heehee' || newData.val() === 'mario_jump' || newData.val() === 'mushroom' || newData.val() === 'klaxon' || newData.val() === 'luigi')"
             }
           }
         },
