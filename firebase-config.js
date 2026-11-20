@@ -1,10 +1,8 @@
-// Remplacer ces valeurs par celles de votre projet Firebase (Paramètres du projet > Applications Web).
-// L'identifiant du professeur se trouve dans Firebase Authentication > Utilisateurs après sa première connexion Google.
+// BUZZ ARENA : projet Firebase partagé avec QUIZ ARENA.
 export const firebaseConfig = {
-  apiKey: 'REMPLACER_API_KEY',
-  authDomain: 'REMPLACER_PROJECT.firebaseapp.com',
-  databaseURL: 'https://REMPLACER_PROJECT-default-rtdb.europe-west1.firebasedatabase.app',
-  projectId: 'REMPLACER_PROJECT',
-  appId: 'REMPLACER_APP_ID'
+  apiKey: "AIzaSyAwD0TZm3ZjDO4QBWRuOZt_vvFYp7yqSnY",
+  authDomain: "quiz-arena-brot2you.firebaseapp.com",
+  databaseURL: "https://quiz-arena-brot2you-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "quiz-arena-brot2you",
+  appId: "1:1027659435185:web:49d52af637b6f36c77a690"
 };
-export const TEACHER_UID = 'REMPLACER_UID_PROFESSEUR';
