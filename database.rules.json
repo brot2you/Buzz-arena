@@ -27,6 +27,9 @@
             },
             "$other": {
               ".validate": false
+            },
+            "sound": {
+              ".validate": "newData.isString() && (newData.val() === 'voice' || newData.val() === 'loud' || newData.val() === 'tv' || newData.val() === 'champion' || newData.val() === 'funny')"
             }
           }
         },
