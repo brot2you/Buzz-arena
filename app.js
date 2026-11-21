@@ -41,7 +41,7 @@ function showPriorityPopup(){
  const overlay=$('priorityPopup');
  if(!overlay)return;
  if(priorityTimer){clearTimeout(priorityTimer);priorityTimer=null;}
- $('priorityWinnerName').textContent=player.name||'Joueur';
+ $('priorityWinnerName').textContent=player.name||t('player');
  const team=$('priorityWinnerTeam');
  team.textContent=player.team||'';
  team.hidden=!player.team;
@@ -136,13 +136,13 @@ function scoreboardRows(entries,highlightUid='',limit=0){
      <span class="score-rank">${i+1}</span>
      <span class="score-avatar" aria-hidden="true">${esc(badge)}</span>
      <span class="score-name-wrap"><span class="score-name">${esc(s.name)}</span>${label?'<span class="score-note">'+label+'</span>':''}</span>
-     <strong class="score-points">${Number(s.score)||0}<small>pts</small></strong>
+     <strong class="score-points">${Number(s.score)||0}<small>${esc(t('pts'))}</small></strong>
    </div>`;
  }).join('');
 }
-function winner(){const id=roomData?.buzz?.uid;return id?(roomData?.players?.[id]||{name:'Joueur déconnecté'}):null;}
-function renderTeacher(){const data=roomData||{};$('audioOutputMode').value=data.meta?.audioMode==='both'?'both':'pc';const winnerP=winner(),status=data.meta?.status||'closed',online=playerEntries().filter(p=>Date.now()-(p.lastSeen||0)<65000);$('roomCode').textContent=room;$('connectionBadge').textContent=status==='open'?t('openBadge'):t('closedBadge');$('connectionBadge').style.background=status==='open'?'#4cb889':'#e89c64';$('teacherState').textContent=winnerP?t('fastest'):status==='open'?t('buzzOpen'):t('buzzLocked');$('winnerDisplay').textContent=winnerP?'⚡ '+winnerP.name+(winnerP.team?' · '+winnerP.team:''):status==='open'?t('marks'):t('roundReady');$('winnerDisplay').classList.toggle('won',!!winnerP);$('playerCount').textContent=online.length;$('playersList').innerHTML=playerEntries().sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<div class="player-item"><span><span class="player-dot" style="background:${Date.now()-(p.lastSeen||0)<65000?'#45c29b':'#d0d5e1'}"></span><strong style="display:inline">${esc(p.name)}</strong><small style="display:block;padding-left:18px">${esc(p.team||t('individual'))}</small></span><div class="player-manage"><strong>${Number(data.scores?.[p.uid]||0)} ★</strong><button type="button" class="kick-player" data-player-id="${esc(p.uid)}" aria-label="Retirer ${esc(p.name)} de la partie" title="Retirer ce joueur (réinscription autorisée)">✕ Retirer</button></div></div>`).join('')||'<p class="empty">Les élèves apparaîtront ici.</p>';$('scoreboardList').innerHTML=scoreboardRows(scoreEntries(),data.buzz?.uid);$('addPoint').disabled=!winnerP;$('subtractPoint').disabled=!winnerP;}
-function renderStudent(){const data=roomData||{},status=data.meta?.status||'closed',win=data.buzz?.uid,btn=$('buzzButton');$('studentRoom').textContent=t('partie')+' '+room;$('studentName').textContent=data.players?.[me]?.name||t('studentEntry');$('myScore').textContent=data.scores?.[me]||0;const team=data.players?.[me]?.team||'';$('myTeam').textContent=team;$('myTeam').classList.toggle('hidden',!team);btn.disabled=status!=='open'||!!win;let title,hint;if(win===me){title=t('yourTurn');hint=t('prepare');}else if(win){title=t('someoneBuzzed');hint=t('otherFaster',{name:data.players?.[win]?.name||t('otherPlayer')});}else if(status==='open'){title=t('yourPlay');hint=t('pressFast');}else{title=t('waitingTeacher');hint=t('waitingTeacher');}$('studentState').textContent=title;$('studentHint').textContent=hint;}
+function winner(){const id=roomData?.buzz?.uid;return id?(roomData?.players?.[id]||{name:t('winnerDisconnected')}):null;}
+function renderTeacher(){const data=roomData||{};$('audioOutputMode').value=data.meta?.audioMode==='both'?'both':'pc';const winnerP=winner(),status=data.meta?.status||'closed',online=playerEntries().filter(p=>Date.now()-(p.lastSeen||0)<65000);$('roomCode').textContent=room;$('connectionBadge').textContent=status==='open'?t('openBadge'):t('closedBadge');$('connectionBadge').style.background=status==='open'?'#4cb889':'#e89c64';$('teacherState').textContent=winnerP?t('fastest'):status==='open'?t('buzzOpen'):t('buzzLocked');$('winnerDisplay').textContent=winnerP?'⚡ '+winnerP.name+(winnerP.team?' · '+winnerP.team:''):status==='open'?t('marks'):t('roundReady');$('winnerDisplay').classList.toggle('won',!!winnerP);$('playerCount').textContent=online.length;$('playersList').innerHTML=playerEntries().sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<div class="player-item"><span><span class="player-dot" style="background:${Date.now()-(p.lastSeen||0)<65000?'#45c29b':'#d0d5e1'}"></span><strong style="display:inline">${esc(p.name)}</strong><small style="display:block;padding-left:18px">${esc(p.team||t('individual'))}</small></span><div class="player-manage"><strong>${Number(data.scores?.[p.uid]||0)} ★</strong><button type="button" class="kick-player" data-player-id="${esc(p.uid)}" aria-label="${esc(t('removeAria',{name:p.name}))}" title="${esc(t('removeTitle'))}">${esc(t('remove'))}</button></div></div>`).join('')||'<p class="empty">Les élèves apparaîtront ici.</p>';$('scoreboardList').innerHTML=scoreboardRows(scoreEntries(),data.buzz?.uid);$('addPoint').disabled=!winnerP;$('subtractPoint').disabled=!winnerP;}
+function renderStudent(){const data=roomData||{},status=data.meta?.status||'closed',win=data.buzz?.uid,btn=$('buzzButton');$('studentRoom').textContent=t('partie')+' '+room;$('studentName').textContent=data.players?.[me]?.name||t('player');$('myScore').textContent=data.scores?.[me]||0;const team=data.players?.[me]?.team||'';$('myTeam').textContent=team;$('myTeam').classList.toggle('hidden',!team);btn.disabled=status!=='open'||!!win;let title,hint;if(win===me){title=t('yourTurn');hint=t('prepare');}else if(win){title=t('someoneBuzzed');hint=t('otherFaster',{name:data.players?.[win]?.name||t('otherPlayer')});}else if(status==='open'){title=t('yourPlay');hint=t('pressFast');}else{title=t('studentWaiting');hint=t('waitingTeacher');}$('studentState').textContent=title;$('studentHint').textContent=hint;}
 function renderProjection(){const d=roomData||{},w=winner(),status=d.meta?.status||'closed';$('projectionCode').textContent=room;$('projectionState').textContent=w?t('firstProjection'):status==='open'?t('projectionOpen'):t('ready');$('projectionWinner').textContent=w?'⚡ '+w.name:'⚡';$('projectionPlayers').textContent=playerEntries().filter(p=>Date.now()-(p.lastSeen||0)<65000).length+' '+t('playersConnected');$('projectionScores').innerHTML=scoreboardRows(scoreEntries(),d.buzz?.uid,8);}
 async function create(){
   if(!ensureConfigured('teacherAuthMsg'))return;
@@ -181,7 +181,7 @@ async function kickPlayer(uid){
   try{
     await update(ref(db,sessionsPath+'/'+room),changes);
     message('teacherMsg',t('removedSuccess',{name}));
-  }catch(err){message('teacherMsg','Impossible de retirer ce joueur : '+fail(err));}
+  }catch(err){message('teacherMsg',t('removeFailed')+fail(err));}
 }
 $('playersList').addEventListener('click',event=>{
   const button=event.target.closest('button.kick-player');
