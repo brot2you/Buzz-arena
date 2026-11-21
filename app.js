@@ -25,7 +25,62 @@ let auth,db,user,room='',role='',me='',roomData=null,stopRoom=null,heartbeat=nul
 let priorityTimer=null;
 let lastSyncedSessionLanguage='';
 
-const ready=!firebaseConfig.apiKey.startsWith('REMPLACER');
+let ready=!firebaseConfig.apiKey.startsWith('REMPLACER');
+let activeConfig=firebaseConfig;
+let backendMode='owner';
+let storedExternalConfig=null;
+const externalStorageKey='buzzArenaExternalFirebaseConfigV1';
+const firebaseModeStorageKey='buzzArenaFirebaseModeV1';
+function validateConfig(candidate){
+ if(!candidate||typeof candidate!=='object')throw Error('Configuration Firebase invalide.');
+ const keys=['apiKey','authDomain','databaseURL','projectId','appId'];
+ for(const key of keys)if(typeof candidate[key]!=='string'||!candidate[key].trim())throw Error('Champ Firebase manquant : '+key);
+ const dbUrl=new URL(candidate.databaseURL);
+ if(dbUrl.protocol!=='https:'||!/(^|\.)(firebasedatabase\.app|firebaseio\.com)$/.test(dbUrl.hostname))throw Error('databaseURL doit être une adresse Firebase Realtime Database.');
+ if(!/^[a-z0-9-]+$/.test(candidate.projectId))throw Error('Identifiant projet Firebase invalide.');
+ if(candidate.projectId===firebaseConfig.projectId)throw Error('Ce projet est déjà le Firebase BROT2YOU. Choisissez un projet indépendant.');
+ if(candidate.apiKey.length>250||candidate.appId.length>250)throw Error('Configuration Firebase non valide.');
+ return Object.fromEntries(['apiKey','authDomain','databaseURL','projectId','appId','messagingSenderId','storageBucket'].filter(key=>typeof candidate[key]==='string').map(key=>[key,candidate[key]]));
+}
+function decodeConfig(raw){
+ const s=String(raw||'').trim();
+ if(s.length>9000)throw Error('Configuration Firebase trop longue.');
+ let value;
+ try{value=JSON.parse(s);}catch{
+  const match=s.match(/(?:const|let|var)\s+firebaseConfig\s*=\s*(\{[\s\S]*?\})\s*;?/);
+  if(!match)throw Error('Collez le bloc firebaseConfig de votre projet, ou un objet JSON.');
+  const json=match[1].replace(/([{,]\s*)([A-Za-z]\w*)\s*:/g,'$1"$2":').replace(/,\s*}/g,'}');
+  try{value=JSON.parse(json);}catch{throw Error('Impossible de lire firebaseConfig. Copiez le bloc complet donné par Firebase.');}
+ }
+ return validateConfig(value);
+}
+function encodeConfig(config){
+ const minimal=Object.fromEntries(['apiKey','authDomain','databaseURL','projectId','appId'].map(k=>[k,config[k]]));
+ const bytes=new TextEncoder().encode(JSON.stringify(minimal));
+ let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
+ return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function fromInviteConfig(encoded){
+ if(!encoded||encoded.length>2500||!/^[A-Za-z0-9_-]+$/.test(encoded))throw Error('Lien de partie Firebase non valide.');
+ const padded=encoded.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-encoded.length%4)%4);
+ const bytes=Uint8Array.from(atob(padded),c=>c.charCodeAt(0));
+ return validateConfig(JSON.parse(new TextDecoder().decode(bytes)));
+}
+function useBackend(config,mode){
+ if(room&&role)throw Error('Quittez la partie en cours avant de changer de Firebase.');
+ activeConfig=config;backendMode=mode;
+ const appName=mode==='owner'?'[DEFAULT]':'external-'+config.projectId;
+ const app=initializeApp(config,appName);
+ auth=getAuth(app);db=getDatabase(app);user=auth.currentUser;
+ onAuthStateChanged(auth,u=>{if(auth===getAuth(app))user=u;});
+ ready=true;
+}
+function studentLink(code){
+ const url=new URL(location.pathname,location.origin);
+ url.searchParams.set('room',code);
+ if(backendMode==='external')url.searchParams.set('fb',encodeConfig(activeConfig));
+ return url;
+}
 const sessionsPath='sessions';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const message=(id,s)=>{$(id).textContent=s;};
@@ -60,7 +115,41 @@ function resetView(){closeLargeQr();clearListeners();room='';role='';me='';show(
 function bind(id,fn){$(id).addEventListener('click',fn);}
 function fail(err){const code=err?.code||'';if(code==='PERMISSION_DENIED'||code==='permission-denied')return 'Accès refusé : vérifie les règles de sécurité Firebase et le compte professeur.';if(code==='auth/popup-blocked')return 'La fenêtre de connexion a été bloquée : autorise les fenêtres pop-up.';if(code==='auth/unauthorized-domain')return 'Ajoute ton domaine GitHub Pages aux domaines autorisés dans Firebase Authentication.';return err?.message||'Une erreur est survenue.';}
 function ensureConfigured(label){if(ready)return true;message(label,'Configuration Firebase manquante : remplis firebase-config.js avant de jouer en ligne.');return false;}
-try{if(ready){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getDatabase(app);onAuthStateChanged(auth,u=>{user=u;});}}catch(err){console.error('Firebase:',err);}
+try{
+ const invited=new URLSearchParams(location.search).get('fb');
+ const stored=localStorage.getItem(externalStorageKey);
+ if(stored){try{storedExternalConfig=validateConfig(JSON.parse(stored));}catch{localStorage.removeItem(externalStorageKey);}}
+ if(invited){useBackend(fromInviteConfig(invited),'external');}
+ else if(localStorage.getItem(firebaseModeStorageKey)==='external'&&storedExternalConfig){useBackend(storedExternalConfig,'external');}
+ else if(ready){useBackend(firebaseConfig,'owner');}
+}catch(err){console.error('Firebase setup:',err);try{useBackend(firebaseConfig,'owner');}catch{}}
+function toggleBackendInputs(){
+ const ext=$('externalFirebase').checked;
+ $('externalFirebasePanel').classList.toggle('hidden',!ext);
+ $('ownerFirebaseHint').classList.toggle('hidden',ext);
+}
+$('ownFirebase').checked=backendMode==='owner';
+$('externalFirebase').checked=backendMode==='external';
+if(storedExternalConfig)$('externalFirebaseConfig').value=JSON.stringify(storedExternalConfig,null,2);
+document.querySelectorAll('input[name="firebaseMode"]').forEach(el=>el.addEventListener('change',()=>{
+ toggleBackendInputs();
+ const ext=$('externalFirebase').checked;
+ if(ext&&!storedExternalConfig){message('externalConfigMsg','Collez la configuration de votre projet Firebase puis enregistrez-la.');return;}
+ try{useBackend(ext?storedExternalConfig:firebaseConfig,ext?'external':'owner');localStorage.setItem(firebaseModeStorageKey,ext?'external':'owner');}
+ catch(e){message(ext?'externalConfigMsg':'teacherAuthMsg',e.message);}
+}));
+bind('validateExternalFirebase',()=>{
+ try{
+  const config=decodeConfig($('externalFirebaseConfig').value);
+  useBackend(config,'external');
+  storedExternalConfig=config;
+  localStorage.setItem(externalStorageKey,JSON.stringify(config));
+  localStorage.setItem(firebaseModeStorageKey,'external');
+  $('externalFirebase').checked=true;
+  message('externalConfigMsg','✓ Firebase personnel enregistré : '+config.projectId+'. Vous pouvez créer une partie.');
+ }catch(e){message('externalConfigMsg',e.message);}
+});
+toggleBackendInputs();
 async function anonymous(){if(!auth)throw Error('Firebase non configuré.');if(auth.currentUser)return auth.currentUser;const data=await signInAnonymously(auth);user=data.user;return user;}
 async function google(){if(!auth)throw Error('Firebase non configuré.');const data=await signInWithPopup(auth,new GoogleAuthProvider());user=data.user;return user;}
 function makeCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return [...bytes].map(b=>chars[b%chars.length]).join('');}
@@ -111,7 +200,7 @@ bind('qrZoomIn',()=>{qrZoomSize=Math.min(600,qrZoomSize+60);renderLargeJoinQr();
 bind('qrZoomOut',()=>{qrZoomSize=Math.max(280,qrZoomSize-60);renderLargeJoinQr();});
 $('qrFullscreen').addEventListener('click',e=>{if(e.target===$('qrFullscreen'))closeLargeQr();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('qrFullscreen').hidden)closeLargeQr();});
-function showJoinQR(code){const target=$('joinQrCode');if(!target)return;target.replaceChildren();$('qrRoomCode').textContent=code;const joinUrl=new URL(location.pathname,location.origin);joinUrl.searchParams.set('room',code);if(typeof window.QRCode==='function'){new window.QRCode(target,{text:joinUrl.href,width:190,height:190,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});message('qrMessage','');}else{message('qrMessage',t('qrNotReady'));}}
+function showJoinQR(code){const target=$('joinQrCode');if(!target)return;target.replaceChildren();$('qrRoomCode').textContent=code;const joinUrl=studentLink(code);if(typeof window.QRCode==='function'){new window.QRCode(target,{text:joinUrl.href,width:190,height:190,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});message('qrMessage','');}else{message('qrMessage',t('qrNotReady'));}}
 const buzzerFiles={"voice":"sounds/the-voice.mp3","loud":"sounds/loud-correct-buzzer.mp3","tv":"sounds/tv-total-buzzer.mp3","champion":"sounds/question-pour-un-champion.mp3","funny":"sounds/funny-correct-buzzer.mp3","mario_no":"sounds/mario-ohhh-nooo.mp3","airhorn":"sounds/airhorn.mp3","sms":"sounds/sms-squeez.mp3","slap":"sounds/slap.mp3","metal":"sounds/metal-gear-alert.mp3","netflix":"sounds/netflix.mp3","heehee":"sounds/michael-jackson-hee-hee.mp3","mario_jump":"sounds/mario-jump.mp3","mushroom":"sounds/mario-bros-mushroom.mp3","klaxon":"sounds/klaxon.mp3","luigi":"sounds/luigi-yahoo.mp3"};
 const knownSounds=new Set(Object.keys(buzzerFiles));
 let activePreview=null;
@@ -193,6 +282,7 @@ async function create(){
   try{
     message('teacherAuthMsg',t('joiningTeacher'));
     const u=await google();
+    if(backendMode==='owner'){const uid=$('firebaseOwnerUid');uid.hidden=false;uid.textContent='Votre UID Firebase : '+u.uid+' — à autoriser dans les règles privées du projet BROT2YOU.';}
     if(u.isAnonymous)throw Error('Le compte professeur doit utiliser Google.');
     const mode=$('mode').value;
     const teams=$('teamNames').value.split(',').map(s=>s.trim().slice(0,24)).filter(Boolean).slice(0,8);
@@ -234,9 +324,9 @@ async function teacherAction(patch){if(role!=='teacher'||!room)return;try{await 
 async function reset(){if(role!=='teacher')return;try{await teacherAction({status:'closed'});await set(ref(db,`${sessionsPath}/${room}/buzz`),null);await teacherAction({status:'open'});}catch(e){message('teacherMsg',fail(e));}}
 async function buzz(){if(!room||role!=='student'||!me||!roomData||roomData.meta.status!=='open'||roomData.buzz)return;const button=$('buzzButton');button.disabled=true;try{const t=await runTransaction(ref(db,`${sessionsPath}/${room}/buzz`),v=>v===null?{uid:me,at:Date.now()}:undefined,{applyLocally:false});if(!t.committed)message('studentHint',t('taken'));}catch(e){message('studentHint',fail(e));button.disabled=false;}}
 async function award(delta){const id=roomData?.buzz?.uid;if(!id||role!=='teacher')return;const old=Number(roomData.scores?.[id]||0);try{await runTransaction(ref(db,`${sessionsPath}/${room}/scores/${id}`),value=>Math.max(0,Math.min(100000,Number(value||0)+delta)));message('teacherMsg',delta>0?t('pointAwarded'):t('scoreCorrected'));}catch(e){message('teacherMsg',fail(e));}}
-async function copyLink(){const url=new URL(location.href);url.search='?room='+room;try{await navigator.clipboard.writeText(url.href);message('teacherMsg',t('fileDownloaded'));}catch{message('teacherMsg','Lien élève : '+url.href);}}
+async function copyLink(){const url=studentLink(room);try{await navigator.clipboard.writeText(url.href);message('teacherMsg',t('fileDownloaded'));}catch{message('teacherMsg','Lien élève : '+url.href);}}
 function exportCSV(){const rows=[['Nom','Équipe','Points'],...playerEntries().map(p=>[p.name,p.team||'',String(roomData?.scores?.[p.uid]||0)])];const csv='\ufeff'+rows.map(r=>r.map(s=>'"'+String(s).replaceAll('"','""')+'"').join(';')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='buzz-arena-'+room+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(u),2000);}
-function projection(){if(!room)return;window.open(location.origin+location.pathname+'?room='+room+'&view=projection','_blank','noopener');}
+function projection(){if(!room)return;const url=studentLink(room);url.searchParams.set('view','projection');window.open(url.href,'_blank','noopener');}
 async function viewProjection(code){if(!ensureConfigured('joinMsg')){show('join');return;}try{await anonymous();const s=await get(ref(db,sessionsPath+'/'+code+'/meta'));if(!s.exists())throw Error('Partie introuvable.');role='projection';listen(code);show('projection');}catch(e){show('join');message('joinMsg',fail(e));}}
 $('languageSelect').addEventListener('change',event=>changeLanguage(event.target.value));applyLanguage();bind('goTeacher',()=>show('teacherAuth'));bind('goStudent',()=>show('join'));document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.target)));bind('createSession',create);$('mode').addEventListener('change',()=> $('teamField').classList.toggle('hidden',$('mode').value!=='teams'));$('joinForm').addEventListener('submit',join);$('codeInput').addEventListener('input',()=>{$('codeInput').value=$('codeInput').value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g,'');loadTeamChoices();});bind('previewSound',()=>playSelectedSound($('soundChoice').value,'joinMsg'));$('audioOutputMode').addEventListener('change',async()=>{const mode=$('audioOutputMode').value;await teacherAction({audioMode:mode});message('teacherMsg',mode==='both'?t('bothMessage'):t('pcMessage'));});bind('enableTeacherSound',()=>{teacherAudioEnabled=true;playSelectedSound('tv','teacherMsg');$('enableTeacherSound').textContent=t('pcEnabled');});bind('enableProjectionSound',()=>{projectionAudioEnabled=true;playSelectedSound('tv');$('enableProjectionSound').textContent=t('soundEnabled');});bind('buzzButton',buzz);bind('openBuzz',()=>teacherAction({status:'open'}));bind('closeBuzz',()=>teacherAction({status:'closed'}));bind('resetBuzz',reset);bind('addPoint',()=>award(1));bind('subtractPoint',()=>award(-1));bind('copyLink',copyLink);bind('exportResults',exportCSV);bind('project',projection);bind('exitTeacher',resetView);bind('exitStudent',resetView);bind('exitProjection',resetView);
 const params=new URLSearchParams(location.search),precode=(params.get('room')||'').toUpperCase();if(/^[A-HJ-NP-Z2-9]{6}$/.test(precode)){if(params.get('view')==='projection')viewProjection(precode);else if(params.get('view')==='teacher'){if(!ready){show('teacherAuth');message('teacherAuthMsg','Configure Firebase pour accéder à la régie.');}else{show('teacherAuth');message('teacherAuthMsg','Reconnecte-toi pour créer une nouvelle session ou ouvre la régie dans ton onglet d’origine.');}}else{$('codeInput').value=precode;show('join');loadTeamChoices();}}
