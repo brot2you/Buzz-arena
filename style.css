@@ -169,3 +169,21 @@
 .topbar .language-control select{border:0;background:transparent;color:#274675;min-height:34px;padding:4px 8px;font-size:14px;font-weight:900;max-width:185px}
 .topbar .top-pill{white-space:nowrap}
 @media(max-width:720px){.topbar .language-control{order:2;margin-left:0;flex:1 1 100%;justify-content:space-between}.topbar .top-pill{display:none}}
+
+/* Agrandissement du QR code pour vidéoprojection */
+.qr-expand-button{margin-top:12px;min-height:44px;padding:8px 15px;font-weight:900}
+.qr-modal[hidden]{display:none!important}
+.qr-modal{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;padding:14px;background:rgba(18,38,83,.82);backdrop-filter:blur(7px);overflow:auto}
+.qr-modal-card{position:relative;width:min(95vw,720px);max-height:95vh;overflow:auto;text-align:center;background:linear-gradient(155deg,#fffdf8,#f0edff);border:5px solid #fff;border-radius:30px;padding:22px 22px 25px;box-shadow:0 25px 75px #0a164a8e;color:#243f7c}
+.qr-modal-card h2{font:700 clamp(25px,4vw,38px) Fredoka,sans-serif;margin:6px 46px 5px}
+.qr-modal-card p{margin:0 0 12px;color:#657499;font-weight:700}
+.qr-modal-close{position:absolute;right:12px;top:12px;border:0;background:#e5dafa;color:#5b348a;width:44px;height:44px;border-radius:15px;font-size:20px}
+.qr-modal-code{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:10px auto;font-weight:900;letter-spacing:1px}
+.qr-modal-code strong{font:700 clamp(30px,5vw,46px) Fredoka,sans-serif;color:#d55985;letter-spacing:5px}
+.qr-modal-visual{display:flex;align-items:center;justify-content:center;margin:10px auto;max-width:100%}
+#largeJoinQrCode{display:flex;align-items:center;justify-content:center;padding:14px;background:#fff;border:4px solid #dbd4fa;border-radius:20px;box-shadow:0 10px 25px #243f7c1f;max-width:100%}
+#largeJoinQrCode img,#largeJoinQrCode canvas{display:block;max-width:calc(min(88vw,630px) - 50px)!important;height:auto!important;object-fit:contain}
+.qr-modal-actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
+.qr-modal-actions button{min-height:44px}
+.qr-modal-actions span{font-weight:900;min-width:60px}
+@media(max-width:480px){.qr-modal-card{padding:18px 10px}.qr-modal-card h2{font-size:24px}.qr-modal-actions{gap:6px}.qr-modal-code{gap:5px}}
