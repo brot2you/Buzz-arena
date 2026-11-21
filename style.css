@@ -162,3 +162,10 @@
 @keyframes priorityPop{from{opacity:0;transform:translateY(35px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.priority-card{padding:28px 15px 22px}.priority-medal{font-size:55px}.priority-rays{letter-spacing:7px}.priority-kicker{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.priority-card,.priority-overlay{animation:none}}
+
+/* Choix de langue universel, accessible sur tous les écrans */
+.topbar{flex-wrap:wrap}
+.topbar .language-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-left:auto;border:2px solid #e2e6f5;border-radius:18px;background:#ffffffed;padding:6px 10px;color:#5874ad;font-size:12px;font-weight:900;letter-spacing:.4px;white-space:nowrap;box-shadow:0 3px #b7cbea24}
+.topbar .language-control select{border:0;background:transparent;color:#274675;min-height:34px;padding:4px 8px;font-size:14px;font-weight:900;max-width:185px}
+.topbar .top-pill{white-space:nowrap}
+@media(max-width:720px){.topbar .language-control{order:2;margin-left:0;flex:1 1 100%;justify-content:space-between}.topbar .top-pill{display:none}}
