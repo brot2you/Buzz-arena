@@ -138,6 +138,15 @@ document.querySelectorAll('input[name="firebaseMode"]').forEach(el=>el.addEventL
  try{useBackend(ext?storedExternalConfig:firebaseConfig,ext?'external':'owner');localStorage.setItem(firebaseModeStorageKey,ext?'external':'owner');}
  catch(e){message(ext?'externalConfigMsg':'teacherAuthMsg',e.message);}
 }));
+bind('showFirebaseUid',async()=>{
+ try{
+  if(backendMode!=='owner')useBackend(firebaseConfig,'owner');
+  $('ownFirebase').checked=true;toggleBackendInputs();
+  const u=await google();
+  const target=$('firebaseOwnerUid');
+  target.hidden=false;target.textContent='UID Firebase du compte connecté : '+u.uid+'. Copiez cet identifiant dans les règles privées avant de les publier.';
+ }catch(err){message('teacherAuthMsg',fail(err));}
+});
 bind('validateExternalFirebase',()=>{
  try{
   const config=decodeConfig($('externalFirebaseConfig').value);
@@ -278,6 +287,7 @@ function renderStudent(){const data=roomData||{},status=data.meta?.status||'clos
 function renderProjection(){const d=roomData||{},w=winner(),status=d.meta?.status||'closed';$('projectionCode').textContent=room;$('projectionState').textContent=w?t('firstProjection'):status==='open'?t('projectionOpen'):t('ready');$('projectionWinner').textContent=w?'⚡ '+w.name:'⚡';$('projectionPlayers').textContent=playerEntries().filter(p=>Date.now()-(p.lastSeen||0)<65000).length+' '+t('playersConnected');$('projectionScores').innerHTML=scoreboardRows(scoreEntries(),d.buzz?.uid,8);}
 async function create(){
   if(!ensureConfigured('teacherAuthMsg'))return;
+  if($('externalFirebase').checked&&backendMode!=='external'){message('teacherAuthMsg','Enregistrez d’abord la configuration de votre propre Firebase.');return;}
   const btn=$('createSession');btn.disabled=true;
   try{
     message('teacherAuthMsg',t('joiningTeacher'));
