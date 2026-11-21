@@ -1,5 +1,5 @@
 import {firebaseConfig} from './firebase-config.js';
-import {supportedLanguages,translate} from './i18n.js';
+import {supportedLanguages,translate} from './i18n.js?v=firebase-hybrid-language-3';
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 import {getDatabase, ref, get, set, update, onValue, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
