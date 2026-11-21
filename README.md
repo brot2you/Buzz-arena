@@ -1,36 +1,39 @@
 # BUZZ ARENA by BROT2YOU
 
-Application de buzzers multijoueur sur GitHub Pages, avec un projet Firebase dédié.
+Buzzer en direct pour classes, avec QR code, classement, sons et interface en six langues. L'application est hébergée sur GitHub Pages ; les parties utilisent Firebase Realtime Database.
 
-## Projet Firebase
+## Deux modes Firebase
 
-- ID : `buzz-arena-brot2you`
-- Realtime Database : `https://buzz-arena-brot2you-default-rtdb.europe-west1.firebasedatabase.app`
-- Configuration Web : `firebase-config.js`
-- Règles à publier manuellement : `database.rules.json`
+### 1. Mon espace BROT2YOU — infrastructure personnelle de l'éditeur
 
-## Mise en service (obligatoire)
+Le projet Firebase utilisé est `buzz-arena-brot2you`. Il **doit être verrouillé côté Firebase** pour que d'autres enseignants ne puissent pas créer de parties avec les quotas de son propriétaire.
 
-1. Dans Firebase Console, projet **buzz-arena-brot2you**, ouvrir **Realtime Database > Règles**.
-2. Remplacer les règles par le contenu entier du fichier **database.rules.json** de ce dépôt et cliquer sur **Publier**. Ne pas publier les règles du projet Quiz Arena.
-3. Dans **Authentication > Méthode de connexion**, activer **Google** (professeur) et **Anonyme** (élèves).
-4. Dans **Authentication > Paramètres > Domaines autorisés**, ajouter **brot2you.github.io** si nécessaire.
-5. Sur `https://brot2you.github.io/Buzz-arena/`, créer une partie avec Google sur le poste enseignant et rejoindre depuis un autre appareil anonyme.
+1. Ouvrir BUZZ ARENA > **Je suis professeur** > **Afficher mon identifiant Firebase (UID)** et se connecter au compte Google propriétaire ; copier l'UID affiché. On peut aussi lire cet UID dans Firebase Console > Authentication > Utilisateurs.
+2. Ouvrir [database.rules-private-owner.json](database.rules-private-owner.json) et **remplacer exactement** `REPLACE_WITH_YOUR_FIREBASE_GOOGLE_UID` par l'UID propriétaire, sans retirer les apostrophes.
+3. Dans le projet Firebase **buzz-arena-brot2you**, ouvrir Realtime Database > Règles ; copier l'intégralité des règles privées personnalisées et **Publier**.
+4. Tester : le compte propriétaire peut créer une partie, un autre compte Google ne le peut pas, et un élève peut toujours rejoindre avec un QR code.
 
-### Notes
+**Attention :** tant que les règles propriétaires ne sont pas publiées sur le vrai projet Firebase, les enseignants extérieurs peuvent encore utiliser les quotas du projet BROT2YOU. Les contrôles d'interface ne protègent pas une base Firebase ; seules les règles côté serveur le font. Ne jamais publier les règles privées avec leur UID fictif : cela bloquerait aussi le propriétaire.
 
-L'application ne peut pas accéder aux données tant que les règles Firebase ne sont pas publiées. Le site est indépendant de Quiz Arena. Un compte Google connecté peut créer sa propre session ; seules ses sessions peuvent ensuite être gérées par ce compte. Éviter de saisir les noms complets des élèves.
+### 2. Mon propre Firebase — enseignants extérieurs
 
-## Sons de buzzer personnalisés (5 sons)
+L'enseignant crée un projet Firebase **distinct** dans Firebase Console :
 
-Les élèves choisissent et testent leur son avant d'entrer, et peuvent le modifier pendant la partie. À l'arrivée du premier buzz, la régie et l'écran de projection jouent le son choisi si le professeur a cliqué « Activer le son ». Un navigateur peut limiter la lecture automatique tant qu'aucun bouton sonore n'a été cliqué.
+1. Realtime Database, dans la région de son choix.
+2. Authentication > Méthode de connexion : activer **Google** (professeur) et **Anonyme** (élèves).
+3. Authentication > Paramètres > Domaines autorisés : ajouter `brot2you.github.io`.
+4. Realtime Database > Règles : copier [database.rules.json](database.rules.json), puis publier dans **son propre projet**, pas celui de BROT2YOU.
+5. Paramètres du projet > Général > Vos applications > Web ; récupérer le bloc `const firebaseConfig = { ... };` contenant `apiKey`, `authDomain`, `databaseURL`, `projectId` et `appId`.
+6. Dans BUZZ ARENA > **Je suis professeur**, sélectionner **Mon propre Firebase**, coller le bloc et cliquer sur **Enregistrer et utiliser mon Firebase**, puis créer une partie.
 
-**Installation des sons :** déposer les 5 fichiers MP3 dans le répertoire `sounds/` (inclus dans l'archive `BUZZ-ARENA-Sons.zip` fournie dans le chat). Le dossier doit contenir :
+La configuration Web est conservée **localement dans le navigateur** de l'enseignant. Elle n'est pas stockée sur le Firebase BROT2YOU. Le QR code et le lien élève transmettent les **identifiants publics de configuration** de son projet, pour que les appareils élèves s'y connectent automatiquement. Aucune clé de service, clé privée ou mot de passe ne doit être collé dans ce champ.
 
-- `sounds/the-voice.mp3`
-- `sounds/loud-correct-buzzer.mp3`
-- `sounds/tv-total-buzzer.mp3`
-- `sounds/question-pour-un-champion.mp3`
-- `sounds/funny-correct-buzzer.mp3`
+**Important :** pour rejoindre une partie sur un Firebase personnel, les élèves doivent scanner le **QR code** ou ouvrir le **lien élève** fourni par l'enseignant ; le seul code à six caractères ne permet pas de retrouver automatiquement le bon projet Firebase sur un appareil qui ne le connaît pas. Le lien de projection transporte également cette configuration.
 
-**Important :** republier `database.rules.json` dans la Realtime Database Firebase du projet `buzz-arena-brot2you`, car le champ `players/$uid/sound` est nouveau. Sans cette mise à jour, l'inscription d'un élève peut être rejetée. Les fichiers audio ne sont pas encore présents dans le dépôt tant qu'ils n'ont pas été envoyés manuellement.
+**Isolation et limites :** chaque enseignant utilisant un projet personnel supporte ses propres quotas et sa facturation éventuelle. Le code du site reste public, mais l'utilisation du Firebase BROT2YOU ne doit être accessible qu'à son propriétaire après application des règles propriétaires. Les élèves peuvent lire la session à laquelle ils ont accès avec un code de partie valide. Éviter les noms complets et données personnelles.
+
+## Déploiement
+
+Site : https://brot2you.github.io/Buzz-arena/
+
+Sources : `index.html`, `app.js`, `i18n.js`, `firebase-config.js`, `style.css`. Les fichiers MP3 sont dans `sounds/` et les logos dans `assets/`.
