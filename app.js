@@ -18,10 +18,12 @@ function changeLanguage(lang){
  if(!supportedLanguages.includes(lang))return;gameLanguage=lang;
  try{localStorage.setItem('buzzArenaLanguage',lang);}catch{}
  applyLanguage();
+ if(typeof role!=='undefined'&&role==='teacher'&&room)teacherAction({language:lang});
 }
 const $=id=>document.getElementById(id);const screens=[...document.querySelectorAll('.screen')];
 let auth,db,user,room='',role='',me='',roomData=null,stopRoom=null,heartbeat=null,teacherSession=false,knownBuzz='';
 let priorityTimer=null;
+let lastSyncedSessionLanguage='';
 
 const ready=!firebaseConfig.apiKey.startsWith('REMPLACER');
 const sessionsPath='sessions';
@@ -53,7 +55,7 @@ bind('closePriorityPopup',hidePriorityPopup);
 bind('dismissPriorityPopup',hidePriorityPopup);
 $('priorityPopup').addEventListener('click',e=>{if(e.target.id==='priorityPopup')hidePriorityPopup();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')hidePriorityPopup();});
-function clearListeners(){hidePriorityPopup();if(stopRoom){stopRoom();stopRoom=null;}if(heartbeat){clearInterval(heartbeat);heartbeat=null;}roomData=null;knownBuzz='';}
+function clearListeners(){lastSyncedSessionLanguage='';hidePriorityPopup();if(stopRoom){stopRoom();stopRoom=null;}if(heartbeat){clearInterval(heartbeat);heartbeat=null;}roomData=null;knownBuzz='';}
 function resetView(){clearListeners();room='';role='';me='';show('home');history.replaceState(null,'',location.pathname);}
 function bind(id,fn){$(id).addEventListener('click',fn);}
 function fail(err){const code=err?.code||'';if(code==='PERMISSION_DENIED'||code==='permission-denied')return 'Accès refusé : vérifie les règles de sécurité Firebase et le compte professeur.';if(code==='auth/popup-blocked')return 'La fenêtre de connexion a été bloquée : autorise les fenêtres pop-up.';if(code==='auth/unauthorized-domain')return 'Ajoute ton domaine GitHub Pages aux domaines autorisés dans Firebase Authentication.';return err?.message||'Une erreur est survenue.';}
@@ -63,6 +65,12 @@ async function anonymous(){if(!auth)throw Error('Firebase non configuré.');if(a
 async function google(){if(!auth)throw Error('Firebase non configuré.');const data=await signInWithPopup(auth,new GoogleAuthProvider());user=data.user;return user;}
 function makeCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return [...bytes].map(b=>chars[b%chars.length]).join('');}
 function listen(code){clearListeners();room=code;stopRoom=onValue(ref(db,`${sessionsPath}/${room}`),s=>{if(!s.exists()){if(role==='teacher')message('teacherMsg','La session a été supprimée.');else if(role==='student')message('studentHint',t('studentDisconnected'));return;}const prev=knownBuzz;roomData=s.val();knownBuzz=roomData.buzz?.uid||'';
+const sessionLanguage=roomData.meta?.language;
+if(role!=='teacher'&&supportedLanguages.includes(sessionLanguage)&&sessionLanguage!==lastSyncedSessionLanguage){
+ lastSyncedSessionLanguage=sessionLanguage;gameLanguage=sessionLanguage;
+ try{localStorage.setItem('buzzArenaLanguage',sessionLanguage);}catch{}
+ applyLanguage();
+}
 if(role==='student'&&me&&(!roomData.players?.[me])){
   clearListeners();role='';me='';show('join');
   $('playerName').value='';message('joinMsg',t('removed'));
@@ -155,7 +163,7 @@ async function create(){
     const teams=$('teamNames').value.split(',').map(s=>s.trim().slice(0,24)).filter(Boolean).slice(0,8);
     if(mode==='teams'&&teams.length<2)throw Error(t('twoTeams'));
     const code=makeCode();
-    const meta={owner:u.uid,status:'closed',mode,audioMode:'pc',teams:mode==='teams'?teams:[],createdAt:Date.now()};
+    const meta={owner:u.uid,status:'closed',mode,language:gameLanguage,audioMode:'pc',teams:mode==='teams'?teams:[],createdAt:Date.now()};
     message('teacherAuthMsg','Compte Google connecté. Création de la session '+code+'…');
     try{
       await set(ref(db,sessionsPath+'/'+code+'/meta'),meta);
