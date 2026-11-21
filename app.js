@@ -4,12 +4,39 @@ import {getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, onAuthS
 import {getDatabase, ref, get, set, update, onValue, runTransaction, serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
 const $=id=>document.getElementById(id);const screens=[...document.querySelectorAll('.screen')];
 let auth,db,user,room='',role='',me='',roomData=null,stopRoom=null,heartbeat=null,teacherSession=false,knownBuzz='';
+let priorityTimer=null;
+
 const ready=!firebaseConfig.apiKey.startsWith('REMPLACER');
 const sessionsPath='sessions';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const message=(id,s)=>{$(id).textContent=s;};
 function show(id){screens.forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'instant'});}
-function clearListeners(){if(stopRoom){stopRoom();stopRoom=null;}if(heartbeat){clearInterval(heartbeat);heartbeat=null;}roomData=null;knownBuzz='';}
+function hidePriorityPopup(){
+ const overlay=$('priorityPopup');
+ if(!overlay)return;
+ if(priorityTimer){clearTimeout(priorityTimer);priorityTimer=null;}
+ overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+}
+function showPriorityPopup(){
+ if(role!=='teacher'&&role!=='projection')return;
+ const player=winner();
+ if(!player)return;
+ const overlay=$('priorityPopup');
+ if(!overlay)return;
+ if(priorityTimer){clearTimeout(priorityTimer);priorityTimer=null;}
+ $('priorityWinnerName').textContent=player.name||'Joueur';
+ const team=$('priorityWinnerTeam');
+ team.textContent=player.team||'';
+ team.hidden=!player.team;
+ overlay.hidden=false;overlay.setAttribute('aria-hidden','false');
+ // The overlay is a brief spotlight: controls remain accessible after 5 seconds.
+ priorityTimer=setTimeout(hidePriorityPopup,5000);
+}
+bind('closePriorityPopup',hidePriorityPopup);
+bind('dismissPriorityPopup',hidePriorityPopup);
+$('priorityPopup').addEventListener('click',e=>{if(e.target.id==='priorityPopup')hidePriorityPopup();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hidePriorityPopup();});
+function clearListeners(){hidePriorityPopup();if(stopRoom){stopRoom();stopRoom=null;}if(heartbeat){clearInterval(heartbeat);heartbeat=null;}roomData=null;knownBuzz='';}
 function resetView(){clearListeners();room='';role='';me='';show('home');history.replaceState(null,'',location.pathname);}
 function bind(id,fn){$(id).addEventListener('click',fn);}
 function fail(err){const code=err?.code||'';if(code==='PERMISSION_DENIED'||code==='permission-denied')return 'Accès refusé : vérifie les règles de sécurité Firebase et le compte professeur.';if(code==='auth/popup-blocked')return 'La fenêtre de connexion a été bloquée : autorise les fenêtres pop-up.';if(code==='auth/unauthorized-domain')return 'Ajoute ton domaine GitHub Pages aux domaines autorisés dans Firebase Authentication.';return err?.message||'Une erreur est survenue.';}
@@ -23,7 +50,7 @@ if(role==='student'&&me&&(!roomData.players?.[me])){
   clearListeners();role='';me='';show('join');
   $('playerName').value='';message('joinMsg','Le professeur t’a retiré de la partie. Tu peux la rejoindre à nouveau avec un pseudo approprié.');
   return;
-}if(role==='teacher')renderTeacher();if(role==='student')renderStudent();if(role==='projection')renderProjection();if(knownBuzz && prev!==knownBuzz)playWinnerSound();},err=>{const msg=fail(err);if(role==='teacher')message('teacherMsg',msg);if(role==='student')message('studentHint',msg);});}
+}if(role==='teacher')renderTeacher();if(role==='student')renderStudent();if(role==='projection')renderProjection();if(!knownBuzz)hidePriorityPopup();if(knownBuzz && prev!==knownBuzz){playWinnerSound();showPriorityPopup();}},err=>{const msg=fail(err);if(role==='teacher')message('teacherMsg',msg);if(role==='student')message('studentHint',msg);});}
 function showJoinQR(code){const target=$('joinQrCode');if(!target)return;target.replaceChildren();$('qrRoomCode').textContent=code;const joinUrl=new URL(location.pathname,location.origin);joinUrl.searchParams.set('room',code);if(typeof window.QRCode==='function'){new window.QRCode(target,{text:joinUrl.href,width:190,height:190,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});message('qrMessage','');}else{message('qrMessage','QR indisponible. Utilise « Copier le lien élève ».');}}
 const buzzerFiles={"voice":"sounds/the-voice.mp3","loud":"sounds/loud-correct-buzzer.mp3","tv":"sounds/tv-total-buzzer.mp3","champion":"sounds/question-pour-un-champion.mp3","funny":"sounds/funny-correct-buzzer.mp3","mario_no":"sounds/mario-ohhh-nooo.mp3","airhorn":"sounds/airhorn.mp3","sms":"sounds/sms-squeez.mp3","slap":"sounds/slap.mp3","metal":"sounds/metal-gear-alert.mp3","netflix":"sounds/netflix.mp3","heehee":"sounds/michael-jackson-hee-hee.mp3","mario_jump":"sounds/mario-jump.mp3","mushroom":"sounds/mario-bros-mushroom.mp3","klaxon":"sounds/klaxon.mp3","luigi":"sounds/luigi-yahoo.mp3"};
 const knownSounds=new Set(Object.keys(buzzerFiles));
