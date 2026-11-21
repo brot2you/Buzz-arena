@@ -56,7 +56,7 @@ bind('dismissPriorityPopup',hidePriorityPopup);
 $('priorityPopup').addEventListener('click',e=>{if(e.target.id==='priorityPopup')hidePriorityPopup();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')hidePriorityPopup();});
 function clearListeners(){lastSyncedSessionLanguage='';hidePriorityPopup();if(stopRoom){stopRoom();stopRoom=null;}if(heartbeat){clearInterval(heartbeat);heartbeat=null;}roomData=null;knownBuzz='';}
-function resetView(){clearListeners();room='';role='';me='';show('home');history.replaceState(null,'',location.pathname);}
+function resetView(){closeLargeQr();clearListeners();room='';role='';me='';show('home');history.replaceState(null,'',location.pathname);}
 function bind(id,fn){$(id).addEventListener('click',fn);}
 function fail(err){const code=err?.code||'';if(code==='PERMISSION_DENIED'||code==='permission-denied')return 'Accès refusé : vérifie les règles de sécurité Firebase et le compte professeur.';if(code==='auth/popup-blocked')return 'La fenêtre de connexion a été bloquée : autorise les fenêtres pop-up.';if(code==='auth/unauthorized-domain')return 'Ajoute ton domaine GitHub Pages aux domaines autorisés dans Firebase Authentication.';return err?.message||'Une erreur est survenue.';}
 function ensureConfigured(label){if(ready)return true;message(label,'Configuration Firebase manquante : remplis firebase-config.js avant de jouer en ligne.');return false;}
@@ -76,6 +76,41 @@ if(role==='student'&&me&&(!roomData.players?.[me])){
   $('playerName').value='';message('joinMsg',t('removed'));
   return;
 }if(role==='teacher')renderTeacher();if(role==='student')renderStudent();if(role==='projection')renderProjection();if(!knownBuzz)hidePriorityPopup();if(knownBuzz && prev!==knownBuzz){playWinnerSound();showPriorityPopup();}},err=>{const msg=fail(err);if(role==='teacher')message('teacherMsg',msg);if(role==='student')message('studentHint',msg);});}
+let qrZoomSize=420;
+function renderLargeJoinQr(){
+ const target=$('largeJoinQrCode');
+ if(!target||!room)return;
+ target.replaceChildren();
+ $('largeQrRoomCode').textContent=room;
+ if(typeof window.QRCode!=='function'){
+  target.textContent=t('qrNotReady');
+  return;
+ }
+ const joinUrl=new URL(location.pathname,location.origin);
+ joinUrl.searchParams.set('room',room);
+ new window.QRCode(target,{text:joinUrl.href,width:qrZoomSize,height:qrZoomSize,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});
+ $('qrZoomStatus').textContent=Math.round(qrZoomSize/420*100)+' %';
+ $('qrZoomOut').disabled=qrZoomSize<=280;
+ $('qrZoomIn').disabled=qrZoomSize>=600;
+}
+function openLargeQr(){
+ if(role!=='teacher'||!room)return;
+ $('qrFullscreen').hidden=false;
+ $('qrFullscreen').setAttribute('aria-hidden','false');
+ renderLargeJoinQr();
+ $('closeQrModal').focus();
+}
+function closeLargeQr(){
+ $('qrFullscreen').hidden=true;
+ $('qrFullscreen').setAttribute('aria-hidden','true');
+}
+bind('expandQrButton',openLargeQr);
+bind('closeQrModal',closeLargeQr);
+bind('qrModalCloseButton',closeLargeQr);
+bind('qrZoomIn',()=>{qrZoomSize=Math.min(600,qrZoomSize+60);renderLargeJoinQr();});
+bind('qrZoomOut',()=>{qrZoomSize=Math.max(280,qrZoomSize-60);renderLargeJoinQr();});
+$('qrFullscreen').addEventListener('click',e=>{if(e.target===$('qrFullscreen'))closeLargeQr();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('qrFullscreen').hidden)closeLargeQr();});
 function showJoinQR(code){const target=$('joinQrCode');if(!target)return;target.replaceChildren();$('qrRoomCode').textContent=code;const joinUrl=new URL(location.pathname,location.origin);joinUrl.searchParams.set('room',code);if(typeof window.QRCode==='function'){new window.QRCode(target,{text:joinUrl.href,width:190,height:190,colorDark:'#21365c',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});message('qrMessage','');}else{message('qrMessage',t('qrNotReady'));}}
 const buzzerFiles={"voice":"sounds/the-voice.mp3","loud":"sounds/loud-correct-buzzer.mp3","tv":"sounds/tv-total-buzzer.mp3","champion":"sounds/question-pour-un-champion.mp3","funny":"sounds/funny-correct-buzzer.mp3","mario_no":"sounds/mario-ohhh-nooo.mp3","airhorn":"sounds/airhorn.mp3","sms":"sounds/sms-squeez.mp3","slap":"sounds/slap.mp3","metal":"sounds/metal-gear-alert.mp3","netflix":"sounds/netflix.mp3","heehee":"sounds/michael-jackson-hee-hee.mp3","mario_jump":"sounds/mario-jump.mp3","mushroom":"sounds/mario-bros-mushroom.mp3","klaxon":"sounds/klaxon.mp3","luigi":"sounds/luigi-yahoo.mp3"};
 const knownSounds=new Set(Object.keys(buzzerFiles));
