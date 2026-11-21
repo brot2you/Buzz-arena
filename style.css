@@ -187,3 +187,5 @@
 .qr-modal-actions button{min-height:44px}
 .qr-modal-actions span{font-weight:900;min-width:60px}
 @media(max-width:480px){.qr-modal-card{padding:18px 10px}.qr-modal-card h2{font-size:24px}.qr-modal-actions{gap:6px}.qr-modal-code{gap:5px}}
+
+.backend-choice{margin:0 0 22px;padding:19px;border-radius:21px;background:#ecf8ff;border:2px solid #c8deef}.backend-choice>strong{color:#274d87;font:700 20px Fredoka,sans-serif}.backend-radio-row{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}.backend-radio-row label{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:12px;background:white;border:1px solid #d8dff1;font-weight:800}.backend-radio-row input{accent-color:#6a59bc;width:18px;height:18px}.backend-hint{font-size:13px;color:#536985;line-height:1.6}.backend-choice textarea{display:block;width:100%;min-height:170px;padding:14px;margin:9px 0;font:13px/1.5 monospace;color:#1a3559;background:white;border:2px solid #d5dff0;border-radius:14px;resize:vertical}.backend-choice button{margin:7px 0}
